@@ -820,6 +820,7 @@ gaugeCategory = Fuel Data
    entry = engineLoad,	    @@GAUGE_NAME_ENGINE_LOAD@@, 	   float,  "%.1f"
    entry = ignitionAdvance,	@@GAUGE_NAME_TIMING_ADVANCE@@,	   float,  "%.2f"
    entry = knockLevel,	    @@GAUGE_NAME_KNOCK_LEVEL@@, 	   float,  "%.2f"
+   entry = knockCount,		@@GAUGE_NAME_KNOCK_COUNTER@@,	   int,    "%d"
    entry = vehicleSpeedKph,	@@GAUGE_NAME_VVS@@,	   float,  "%.2f"
    entry = speedToRpmRatio, "s2rpm",	   float,  "%.3f"
    entry = rpmAcceleration, "dRPM",        float,  "%.3f"
@@ -841,6 +842,14 @@ gaugeCategory = Fuel Data
 
    entry = accelerationX,	@@GAUGE_NAME_ACCEL_X@@,	float,"%.2f"
    entry = accelerationY,	@@GAUGE_NAME_ACCEL_Y@@,	float,"%.2f"
+   entry = egt1,	        "EGT1",	float,"%.1f"
+   entry = egt2,	        "EGT2",	float,"%.1f"
+   entry = egt3,	        "EGT3",	float,"%.1f"
+   entry = egt4,	        "EGT4",	float,"%.1f"
+   entry = egt5,	        "EGT5",	float,"%.1f"
+   entry = egt6,	        "EGT6",	float,"%.1f"
+   entry = egt7,	        "EGT7",	float,"%.1f"
+   entry = egt8,	        "EGT8",	float,"%.1f"
 
    entry = engineLoadAccelExtra, @@GAUGE_NAME_FUEL_EL_EXTRA@@,float,  "%.3f"
    entry = engineLoadDelta, "fuel: load change",float,  "%.3f"
@@ -1638,6 +1647,7 @@ cmd_stop_engine              = "w\x00\x99\x00\x00"
 		field = "ChipSelect mode",						hip9011CsPinMode, {isHip9011Enabled == 1}
 		field = "hip Output/stm input",					hipOutputChannel, {isHip9011Enabled == 1}
 		field = "prescaler & SDO",						hip9011PrescalerAndSDO, {isHip9011Enabled == 1}
+		field = "cylinder bore (mm)",					cylinderBore, {isHip9011Enabled == 1}
 		field = "Band Freq override",					knockBandCustom, {isHip9011Enabled == 1}
 		field = "SPI device",							hip9011SpiDevice, {isHip9011Enabled == 1}
 		field = "SPI1sck",								spi1SckMode, {isHip9011Enabled == 1}

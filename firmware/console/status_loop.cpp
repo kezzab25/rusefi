@@ -653,7 +653,7 @@ static void lcdThread(void *arg) {
 
 #if EFI_HIP_9011 || defined(__DOXYGEN__)
 extern int correctResponsesCount;
-extern int invalidResponsesCount;
+extern int invalidHip9011ResponsesCount;
 #endif /* EFI_HIP_9011 */
 
 #if EFI_TUNER_STUDIO || defined(__DOXYGEN__)
@@ -734,6 +734,9 @@ void updateTunerStudioState(TunerStudioOutputChannels *tsOutputChannels DECLARE_
 
 	tsOutputChannels->isWarnNow = isWarningNow(now, true);
 	tsOutputChannels->isCltBroken = engine->isCltBroken;
+#if EFI_HIP_9011 || defined(__DOXYGEN__)
+	tsOutputChannels->isKnockChipOk = (invalidHip9011ResponsesCount == 0);
+#endif /* EFI_HIP_9011 */
 
 	switch (engineConfiguration->debugMode)	{
 	case DBG_STATUS:
@@ -794,7 +797,7 @@ void updateTunerStudioState(TunerStudioOutputChannels *tsOutputChannels DECLARE_
 #if EFI_HIP_9011 || defined(__DOXYGEN__)
 	case DBG_KNOCK:
 		tsOutputChannels->debugIntField1 = correctResponsesCount;
-		tsOutputChannels->debugIntField2 = invalidResponsesCount;
+		tsOutputChannels->debugIntField2 = invalidHip9011ResponsesCount;
 		break;
 #endif /* EFI_HIP_9011 */
 #if EFI_CJ125 || defined(__DOXYGEN__)

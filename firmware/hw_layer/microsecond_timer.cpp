@@ -70,9 +70,13 @@ void setHardwareUsTimer(int32_t timeUs) {
 		return;
 	}
 
-	if (GPTDEVICE.state == GPT_ONESHOT)
+	if (GPTDEVICE.state == GPT_ONESHOT) {
 		gptStopTimerI(&GPTDEVICE);
-	efiAssertVoid(GPTDEVICE.state == GPT_READY, "hw timer");
+	}
+	if (GPTDEVICE.state != GPT_READY) {
+		firmwareError(CUSTOM_ERR_6541, "HW timer state %d", GPTDEVICE.state);
+		return;
+	}
 	if (hasFirmwareError())
 		return;
 	gptStartOneShotI(&GPTDEVICE, timeUs);
