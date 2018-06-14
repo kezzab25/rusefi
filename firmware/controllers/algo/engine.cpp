@@ -73,7 +73,7 @@ void Engine::updateSlowSensors(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 	// todo: move this logic somewhere to sensors folder?
 	if (engineConfiguration->fuelLevelSensor != EFI_ADC_NONE) {
 		float fuelLevelVoltage = getVoltageDivided("fuel", engineConfiguration->fuelLevelSensor);
-		sensors.fuelTankGauge = interpolate(boardConfiguration->fuelLevelEmptyTankVoltage, 0,
+		sensors.fuelTankGauge = interpolateMsg("fgauge", boardConfiguration->fuelLevelEmptyTankVoltage, 0,
 				boardConfiguration->fuelLevelFullTankVoltage, 100,
 				fuelLevelVoltage);
 	}
@@ -282,7 +282,7 @@ void EngineState::periodicFastCallback(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 
 	baroCorrection = getBaroCorrection(PASS_ENGINE_PARAMETER_SIGNATURE);
 
-	injectionOffset = getinjectionOffset(rpm PASS_ENGINE_PARAMETER_SUFFIX);
+	injectionOffset = getInjectionOffset(rpm PASS_ENGINE_PARAMETER_SUFFIX);
 	float engineLoad = getEngineLoadT(PASS_ENGINE_PARAMETER_SIGNATURE);
 	timingAdvance = getAdvance(rpm, engineLoad PASS_ENGINE_PARAMETER_SUFFIX);
 
