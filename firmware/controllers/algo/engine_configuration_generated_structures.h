@@ -1,4 +1,4 @@
-// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Sun May 20 13:21:41 EDT 2018
+// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Fri Jun 22 11:35:17 CDT 2018
 // begin
 #ifndef ENGINE_CONFIGURATION_GENERATED_H_
 #define ENGINE_CONFIGURATION_GENERATED_H_
@@ -571,6 +571,7 @@ typedef struct {
 	 */
 	pin_output_mode_e triggerSimulatorPinModes[TRIGGER_SIMULATOR_PIN_COUNT];
 	/**
+	 * Narrow band o2 heater, not used for CJ125. See wboHeaterPin
 	 * offset 368
 	 */
 	brain_pin_e o2heaterPin;
@@ -914,7 +915,7 @@ typedef struct {
 	bool useBiQuadAnalogFiltering : 1;
 	/**
 	offset 76 bit 10 */
-	bool issue_294_10 : 1;
+	bool cj125isUaDivided : 1;
 	/**
 	offset 76 bit 11 */
 	bool issue_294_11 : 1;
@@ -1262,6 +1263,7 @@ typedef struct {
 	offset 1472 bit 1 */
 	bool fuelClosedLoopCorrectionEnabled : 1;
 	/**
+	 * Print details into rusEfi console
 	offset 1472 bit 2 */
 	bool isVerboseIAC : 1;
 	/**
@@ -1979,7 +1981,7 @@ typedef struct {
 	 */
 	pin_mode_e stepperEnablePinMode;
 	/**
-	 * lampda input
+	 * lambda input
 	 * offset 2720
 	 */
 	adc_channel_e cj125ua;
@@ -2124,9 +2126,10 @@ typedef struct {
 	 */
 	int16_t pidExtraForLowRpm;
 	/**
+	 *  maximum manifold pressure for fuel cut
 	 * offset 3386
 	 */
-	int16_t unusedInt16;
+	int16_t coastingFuelCutMap;
 	/**
 	 * CLT-based idle position for coasting (used in Auto-PID Idle mode)
 	 * offset 3388
@@ -2386,4 +2389,4 @@ typedef struct {
 
 #endif
 // end
-// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Sun May 20 13:21:41 EDT 2018
+// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Fri Jun 22 11:35:17 CDT 2018

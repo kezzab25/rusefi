@@ -137,8 +137,14 @@ static float getUr() {
 }
 
 static float getUa() {
-	if (CONFIG(cj125ua) != EFI_ADC_NONE)
-		return getVoltageDivided("cj125ua", CONFIG(cj125ua));
+	if (CONFIG(cj125ua) != EFI_ADC_NONE) {
+		if (engineConfiguration->cj125isUaDivided) {
+			return getVoltageDivided("cj125ua", CONFIG(cj125ua));
+		} else {
+			return getVoltage("cj125ua", CONFIG(cj125ua));
+		}
+	}
+
 	return 0.0f;
 }
 
@@ -357,6 +363,28 @@ static void cjInitPid(void) {
 	heaterPid.reset();
 }
 
+//	engineConfiguration->spi2SckMode = PAL_STM32_OTYPE_OPENDRAIN; // 4
+//	engineConfiguration->spi2MosiMode = PAL_STM32_OTYPE_OPENDRAIN; // 4
+//	engineConfiguration->spi2MisoMode = PAL_STM32_PUDR_PULLUP; // 32
+//	boardConfiguration->cj125CsPin = GPIOA_15;
+//	engineConfiguration->cj125CsPinMode = OM_OPENDRAIN;
+
+void cj125defaultPinout() {
+	engineConfiguration->cj125ua = EFI_ADC_13; // PC3
+	engineConfiguration->cj125ur = EFI_ADC_4; // PA4
+	boardConfiguration->wboHeaterPin = GPIOC_13;
+
+	boardConfiguration->isCJ125Enabled = false;
+
+	boardConfiguration->spi2mosiPin = GPIOB_15;
+	boardConfiguration->spi2misoPin = GPIOB_14;
+	boardConfiguration->spi2sckPin = GPIOB_13;
+
+	boardConfiguration->cj125CsPin = GPIOB_0;
+	boardConfiguration->isCJ125Enabled = true;
+	boardConfiguration->is_enabled_spi_2 = true;
+}
+
 static void cjStartSpi(void) {
 	cj125spicfg.ssport = getHwPort("cj125", boardConfiguration->cj125CsPin);
 	cj125spicfg.sspad = getHwPin("cj125", boardConfiguration->cj125CsPin);
@@ -425,11 +453,6 @@ static msg_t cjThread(void)
 #if 0
 		// Change amplification if AFR gets lean/rich for better accuracy
 		cjSetMode(lambda > 1.0f ? CJ125_MODE_NORMAL_17 : CJ125_MODE_NORMAL_8);
-#endif
-
-#if 0
-		// Update console output variables
-		cjPostState(&tsOutputChannels);
 #endif
 
 		switch (state) {
@@ -542,6 +565,7 @@ bool cjHasAfrSensor(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 	return true;
 }
 
+// used by DBG_CJ125
 void cjPostState(TunerStudioOutputChannels *tsOutputChannels) {
 	tsOutputChannels->debugFloatField1 = heaterDuty;
 	tsOutputChannels->debugFloatField2 = heaterPid.getIntegration();

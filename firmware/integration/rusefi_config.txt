@@ -255,7 +255,7 @@ bit isVerboseAuxPid3;
 bit activateAuxPid4;
 bit isVerboseAuxPid4;
 bit useBiQuadAnalogFiltering;
-bit issue_294_10;
+bit cj125isUaDivided;
 bit issue_294_11;
 bit issue_294_12;
 bit issue_294_13;
@@ -524,7 +524,7 @@ custom adc_channel_mode_e 4 bits,    U32,   @OFFSET@, [0:1], "Off", "Slow", "Fas
 	brain_pin_e[TRIGGER_SIMULATOR_PIN_COUNT iterate] triggerSimulatorPins;
 	pin_output_mode_e[TRIGGER_SIMULATOR_PIN_COUNT iterate] triggerSimulatorPinModes;
 
-	brain_pin_e o2heaterPin;
+	brain_pin_e o2heaterPin;Narrow band o2 heater, not used for CJ125. See wboHeaterPin
 	pin_output_mode_e o2heaterPinModeTodO;
 
 bit is_enabled_spi_1
@@ -639,7 +639,7 @@ custom le_formula_t 200 string, ASCII, @OFFSET@, 200
 board_configuration_s bc;
 bit vvtDisplayInverted
 	bit fuelClosedLoopCorrectionEnabled
-	bit isVerboseIAC
+	bit isVerboseIAC;+Print details into rusEfi console
 	bit isVerboseETB;enable verbose_etb
 	bit useConstantDwellDuringCranking 
 	bit isEngineChartEnabled;This options enables data for 'engine sniffer' tab in console, which comes at some CPU price 
@@ -860,7 +860,7 @@ float[MAP_ACCEL_TAPER] mapAccelTaperMult;;"mult",      1,     0,   0.0,    300, 
 	pid_s fuelClosedLoopPid;
 	float fuelClosedLoopAfrHighThreshold;;"ratio",        1,     0,  0,    100,  1
 	pin_mode_e stepperEnablePinMode;
-	adc_channel_e cj125ua;lampda input
+	adc_channel_e cj125ua;lambda input
 	adc_channel_e cj125ur;heater input
 	
 	custom cfg_float_t_1f 4 scalar,  F32,   @OFFSET@, 		"Val",	   1,	   0,       -20000000, 20000000,	  1
@@ -900,11 +900,11 @@ float[CRANKING_ADVANCE_CURVE_SIZE] crankingAdvance    ;Optional timing advance t
 	brain_pin_e[SERVO_COUNT iterate] servoOutputPins;todo: more comments
 	int16_t coastingFuelCutRpmHigh;;"rpm",        1,     0,  0,    5000,  0
 	int16_t coastingFuelCutRpmLow;;"rpm",        1,     0,  0,    5000,  0
-	int16_t coastingFuelCutTps;percent between 0 and 100;"%",        1,     0,  0,    100,  0
+	int16_t coastingFuelCutTps;percent between 0 and 100;"%",        1,     0,  0,    100,  1
 	int16_t coastingFuelCutClt;Fuel cutoff is deactivated if CLT<threshold;"C",        1,     0,  -100,    100,  0
 	
 	int16_t pidExtraForLowRpm;+Increases PID reaction for RPM<target by adding extra percent to PID-error;"%",        1,     0,  0,    100,  0
-	int16_t unusedInt16;
+	int16_t coastingFuelCutMap; maximum manifold pressure for fuel cut;"kPa", 1, 0, 0, 250, 0
 	
 float[CLT_CURVE_SIZE] iacCoastingBins;CLT-based idle position for coasting (used in Auto-PID Idle mode);"C",        1,     0,   -100.0,    250.0,  2
 float[CLT_CURVE_SIZE] iacCoasting;    CLT-based idle position for coasting (used in Auto-PID Idle mode);"%",      1,     0,      0.0,    100.0,   2
