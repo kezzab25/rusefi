@@ -30,8 +30,6 @@ int isIgnitionTimingError(void) {
 	return ignitionErrorDetection.sum(6) > 4;
 }
 
-void prepareIgnitionSchedule(IgnitionEvent *event DECLARE_ENGINE_PARAMETER_SUFFIX);
-
 static void turnSparkPinLow2(IgnitionEvent *event, IgnitionOutputPin *output) {
 #if SPARK_EXTREME_LOGGING || defined(__DOXYGEN__)
 	scheduleMsg(logger, "spark goes low  %d %s %d current=%d cnt=%d id=%d", getRevolutionCounter(), output->name, (int)getTimeNowUs(),
@@ -61,6 +59,54 @@ static void turnSparkPinLow2(IgnitionEvent *event, IgnitionOutputPin *output) {
 #endif /* EFI_PROD_CODE */
 }
 
+// todo: make this a class method?
+#define assertPinAssigned(output) { \
+		if (!output->isInitialized()) { \
+			warning(CUSTOM_OBD_COIL_PIN_NOT_ASSIGNED, "no_pin_cl #%s", (output)->name); \
+		} \
+}
+
+static void prepareCylinderIgnitionSchedule(angle_t dwellAngle, IgnitionEvent *event DECLARE_ENGINE_PARAMETER_SUFFIX) {
+	// todo: clean up this implementation? does not look too nice as is.
+
+	// change of sign here from 'before TDC' to 'after TDC'
+	angle_t ignitionPositionWithinEngineCycle = ENGINE(ignitionPositionWithinEngineCycle[event->cylinderIndex]);
+	assertAngleRange(ignitionPositionWithinEngineCycle, "aPWEC", CUSTOM_ERR_6566);
+	cfg_float_t_1f timing_offset_cylinder = CONFIG(timing_offset_cylinder[event->cylinderIndex]);
+	const angle_t localAdvance = -ENGINE(engineState.timingAdvance) + ignitionPositionWithinEngineCycle + timing_offset_cylinder;
+
+	efiAssertVoid(!cisnan(localAdvance), "localAdvance#1");
+	const int index = ENGINE(ignitionPin[event->cylinderIndex]);
+	const int coilIndex = ID2INDEX(getCylinderId(index PASS_ENGINE_PARAMETER_SUFFIX));
+	IgnitionOutputPin *output = &enginePins.coils[coilIndex];
+
+	IgnitionOutputPin *secondOutput;
+	if (getIgnitionMode(PASS_ENGINE_PARAMETER_SIGNATURE) == IM_WASTED_SPARK && CONFIG(twoWireBatchIgnition)) {
+		int secondIndex = index + CONFIG(specs.cylindersCount) / 2;
+		int secondCoilIndex = ID2INDEX(getCylinderId(secondIndex PASS_ENGINE_PARAMETER_SUFFIX));
+		secondOutput = &enginePins.coils[secondCoilIndex];
+		assertPinAssigned(secondOutput);
+	} else {
+		secondOutput = NULL;
+	}
+
+	assertPinAssigned(output);
+
+	event->outputs[0] = output;
+	event->outputs[1] = secondOutput;
+	event->advance = localAdvance;
+
+	angle_t a = localAdvance - dwellAngle;
+	efiAssertVoid(!cisnan(a), "findAngle#5");
+	assertAngleRange(a, "findAngle#a6", CUSTOM_ERR_6550);
+	TRIGGER_SHAPE(findTriggerPosition(&event->dwellPosition, a PASS_ENGINE_PARAMETER_SUFFIX));
+
+#if FUEL_MATH_EXTREME_LOGGING || defined(__DOXYGEN__)
+	printf("addIgnitionEvent %s ind=%d\n", output->name, event->dwellPosition.eventIndex);
+	//	scheduleMsg(logger, "addIgnitionEvent %s ind=%d", output->name, event->dwellPosition->eventIndex);
+#endif /* FUEL_MATH_EXTREME_LOGGING */
+}
+
 void turnSparkPinLow(IgnitionEvent *event) {
 	for (int i = 0; i< MAX_OUTPUTS_FOR_IGNITION;i++) {
 		IgnitionOutputPin *output = event->outputs[i];
@@ -73,7 +119,13 @@ void turnSparkPinLow(IgnitionEvent *event) {
 	EXPAND_Engine;
 #endif
 	// now that we've just fired a coil let's prepare the new schedule for the next engine revolution
-	prepareIgnitionSchedule(event PASS_ENGINE_PARAMETER_SUFFIX);
+
+	angle_t dwellAngle = ENGINE(engineState.dwellAngle);
+	if (cisnan(dwellAngle)) {
+		// we are here if engine has just stopped
+		return;
+	}
+ 	prepareCylinderIgnitionSchedule(dwellAngle, event PASS_ENGINE_PARAMETER_SUFFIX);
 }
 
 static void turnSparkPinHigh2(IgnitionEvent *event, IgnitionOutputPin *output) {
@@ -174,7 +226,7 @@ static ALWAYS_INLINE void handleSparkEvent(bool limitedSpark, uint32_t trgEventI
 	 */
 	float advance = iEvent->advance;
 	efiAssertVoid(!cisnan(advance), "findAngle#4");
-	assertAngleRange(advance, "findAngle#a5");
+	assertAngleRange(advance, "findAngle#a5", CUSTOM_ERR_6549);
 	TRIGGER_SHAPE(findTriggerPosition(&iEvent->sparkPosition, advance PASS_ENGINE_PARAMETER_SUFFIX));
 
 #if EFI_UNIT_TEST || defined(__DOXYGEN__)
@@ -213,53 +265,9 @@ static ALWAYS_INLINE void handleSparkEvent(bool limitedSpark, uint32_t trgEventI
 	}
 }
 
-// todo: make this a class method?
-#define assertPinAssigned(output) { \
-		if (!output->isInitialized()) { \
-			warning(CUSTOM_OBD_COIL_PIN_NOT_ASSIGNED, "no_pin_cl #%s", (output)->name); \
-		} \
-}
-
-void prepareIgnitionSchedule(IgnitionEvent *event DECLARE_ENGINE_PARAMETER_SUFFIX) {
-	// todo: clean up this implementation? does not look too nice as is.
-
-	// change of sign here from 'before TDC' to 'after TDC'
-	const angle_t localAdvance = -ENGINE(engineState.timingAdvance) + ENGINE(ignitionPositionWithEngineCycle[event->cylinderIndex]) + CONFIG(timing_offset_cylinder[event->cylinderIndex]);
-	efiAssertVoid(!cisnan(localAdvance), "localAdvance#1");
-	const int index = ENGINE(ignitionPin[event->cylinderIndex]);
-	const int coilIndex = ID2INDEX(getCylinderId(index PASS_ENGINE_PARAMETER_SUFFIX));
-	IgnitionOutputPin *output = &enginePins.coils[coilIndex];
-
-	IgnitionOutputPin *secondOutput;
-	if (getIgnitionMode(PASS_ENGINE_PARAMETER_SIGNATURE) == IM_WASTED_SPARK && CONFIG(twoWireBatchIgnition)) {
-		int secondIndex = index + CONFIG(specs.cylindersCount) / 2;
-		int secondCoilIndex = ID2INDEX(getCylinderId(secondIndex PASS_ENGINE_PARAMETER_SUFFIX));
-		secondOutput = &enginePins.coils[secondCoilIndex];
-		assertPinAssigned(secondOutput);
-	} else {
-		secondOutput = NULL;
-	}
-	angle_t dwellAngle = ENGINE(engineState.dwellAngle);
-
-	assertPinAssigned(output);
-
-	event->outputs[0] = output;
-	event->outputs[1] = secondOutput;
-	event->advance = localAdvance;
-
-	angle_t a = localAdvance - dwellAngle;
-	efiAssertVoid(!cisnan(a), "findAngle#5");
-	assertAngleRange(a, "findAngle#a6");
-	TRIGGER_SHAPE(findTriggerPosition(&event->dwellPosition, a PASS_ENGINE_PARAMETER_SUFFIX));
-
-#if FUEL_MATH_EXTREME_LOGGING || defined(__DOXYGEN__)
-	printf("addIgnitionEvent %s ind=%d\n", output->name, event->dwellPosition.eventIndex);
-	//	scheduleMsg(logger, "addIgnitionEvent %s ind=%d", output->name, event->dwellPosition->eventIndex);
-#endif /* FUEL_MATH_EXTREME_LOGGING */
-}
-
 static void initializeIgnitionActions(IgnitionEventList *list DECLARE_ENGINE_PARAMETER_SUFFIX) {
-	if (cisnan(ENGINE(engineState.timingAdvance))) {
+	angle_t dwellAngle = ENGINE(engineState.dwellAngle);
+	if (cisnan(ENGINE(engineState.timingAdvance)) || cisnan(dwellAngle)) {
 		// error should already be reported
 		// need to invalidate previous ignition schedule
 		list->isReady = false;
@@ -272,7 +280,7 @@ static void initializeIgnitionActions(IgnitionEventList *list DECLARE_ENGINE_PAR
 #if EFI_UNIT_TEST || defined(__DOXYGEN__)
 		list->elements[cylinderIndex].engine = engine;
 #endif /* EFI_UNIT_TEST */
-		prepareIgnitionSchedule(&list->elements[cylinderIndex] PASS_ENGINE_PARAMETER_SUFFIX);
+		prepareCylinderIgnitionSchedule(dwellAngle, &list->elements[cylinderIndex] PASS_ENGINE_PARAMETER_SUFFIX);
 	}
 	list->isReady = true;
 }

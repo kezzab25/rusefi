@@ -222,7 +222,7 @@ void postMapState(TunerStudioOutputChannels *tsOutputChannels) {
 }
 
 void refreshMapAveragingPreCalc(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
-	int rpm = engine->rpmCalculator.rpmValue;
+	int rpm = GET_RPM();
 	if (isValidRpm(rpm)) {
 		MAP_sensor_config_s * c = &engineConfiguration->map;
 		angle_t start = interpolate2d("mapa", rpm, c->samplingAngleBins, c->samplingAngle, MAP_ANGLE_SIZE);
@@ -232,7 +232,7 @@ void refreshMapAveragingPreCalc(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 		for (int i = 0; i < engineConfiguration->specs.cylindersCount; i++) {
 			angle_t cylinderOffset = getEngineCycle(engineConfiguration->operationMode) * i / engineConfiguration->specs.cylindersCount;
 			float cylinderStart = start + cylinderOffset - offsetAngle + tdcPosition();
-			fixAngle(cylinderStart, "cylinderStart");
+			fixAngle(cylinderStart, "cylinderStart", CUSTOM_ERR_6562);
 			engine->engineState.mapAveragingStart[i] = cylinderStart;
 		}
 		engine->engineState.mapAveragingDuration = interpolate2d("samp", rpm, c->samplingWindowBins, c->samplingWindow, MAP_WINDOW_SIZE);
@@ -256,7 +256,7 @@ static void mapAveragingTriggerCallback(trigger_event_e ckpEventType,
 		return;
 
 	engine->m.beforeMapAveragingCb = GET_TIMESTAMP();
-	int rpm = ENGINE(rpmCalculator.rpmValue);
+	int rpm = GET_RPM();
 	if (!isValidRpm(rpm)) {
 		return;
 	}
@@ -288,7 +288,7 @@ static void mapAveragingTriggerCallback(trigger_event_e ckpEventType,
 		}
 
 
-		fixAngle(samplingEnd, "samplingEnd");
+		fixAngle(samplingEnd, "samplingEnd", CUSTOM_ERR_6563);
 		// only if value is already prepared
 		int structIndex = getRevolutionCounter() % 2;
 		// todo: schedule this based on closest trigger event, same as ignition works
@@ -317,7 +317,7 @@ float getMap(void) {
 	}
 
 #if EFI_ANALOG_SENSORS || defined(__DOXYGEN__)
-	if (!isValidRpm(engine->rpmCalculator.rpmValue) || currentPressure == NO_VALUE_YET)
+	if (!isValidRpm(GET_RPM()) || currentPressure == NO_VALUE_YET)
 		return validateMap(getRawMap()); // maybe return NaN in case of stopped engine?
 	return validateMap(currentPressure);
 #else
