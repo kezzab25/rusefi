@@ -83,6 +83,14 @@ void baseHardwareInit(void) {
 	BOR_Set(BOR_Level_1); // one step above default value
 }
 
+void _unhandled_exception(void) {
+/*lint -restore*/
+
+  chDbgPanic3("_unhandled_exception", __FILE__, __LINE__);
+  while (true) {
+  }
+}
+
 void DebugMonitorVector(void) {
 	chDbgPanic3("DebugMonitorVector", __FILE__, __LINE__);
 	while (TRUE)
@@ -374,7 +382,7 @@ static bool isValidCan1RxPin(brain_pin_e pin) {
 }
 
 static bool isValidCan1TxPin(brain_pin_e pin) {
-	return pin == GPIOA_12 || pin == GPIOB_9 || GPIOD_1;
+	return pin == GPIOA_12 || pin == GPIOB_9 || pin == GPIOD_1;
 }
 
 static bool isValidCan2RxPin(brain_pin_e pin) {

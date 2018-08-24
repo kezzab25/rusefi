@@ -87,7 +87,7 @@ void Map3D<RPM_BIN_SIZE, LOAD_BIN_SIZE, vType>::init(vType table[RPM_BIN_SIZE][L
 
 template<int RPM_BIN_SIZE, int LOAD_BIN_SIZE, typename vType>
 float Map3D<RPM_BIN_SIZE, LOAD_BIN_SIZE, vType>::getValue(float xRpm, float y) {
-	efiAssert(initialized, "map not initialized", NAN);
+	efiAssert(CUSTOM_ERR_ASSERT, initialized, "map not initialized", NAN);
 	if (cisnan(y)) {
 		warning(CUSTOM_PARAM_RANGE, "%s: y is NaN", name);
 		return NAN;
@@ -118,7 +118,7 @@ void Map3D<RPM_BIN_SIZE, LOAD_BIN_SIZE, vType>::create(const char *name, float m
 
 template<int RPM_BIN_SIZE, int LOAD_BIN_SIZE, typename vType>
 void Map3D<RPM_BIN_SIZE, LOAD_BIN_SIZE, vType>::setAll(vType value) {
-	efiAssertVoid(initialized, "map not initialized");
+	efiAssertVoid(CUSTOM_ERR_6573, initialized, "map not initialized");
 	for (int l = 0; l < LOAD_BIN_SIZE; l++) {
 		for (int r = 0; r < RPM_BIN_SIZE; r++) {
 			pointers[l][r] = value / multiplier;

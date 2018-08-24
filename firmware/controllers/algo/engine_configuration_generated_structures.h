@@ -1,4 +1,4 @@
-// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Sun Jul 22 11:54:40 EDT 2018
+// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Sat Aug 04 10:21:45 EDT 2018
 // begin
 #ifndef ENGINE_CONFIGURATION_GENERATED_H_
 #define ENGINE_CONFIGURATION_GENERATED_H_
@@ -918,7 +918,7 @@ typedef struct {
 	bool cj125isUaDivided : 1;
 	/**
 	offset 76 bit 11 */
-	bool issue_294_11 : 1;
+	bool cj125isLsu49 : 1;
 	/**
 	offset 76 bit 12 */
 	bool issue_294_12 : 1;
@@ -1341,7 +1341,7 @@ typedef struct {
 	bool useFSIO12ForServo5 : 1;
 	/**
 	offset 1472 bit 26 */
-	bool unused_bit_1472_26 : 1;
+	bool useFSIO15ForIdleRpmAdjustment : 1;
 	/**
 	offset 1472 bit 27 */
 	bool unused_bit_1472_27 : 1;
@@ -1609,12 +1609,12 @@ typedef struct {
 	 * blue LED on discovery by default
 	 * offset 1908
 	 */
-	brain_pin_e communicationPin;
+	brain_pin_e communicationLedPin;
 	/**
 	 * green LED on discovery by default
 	 * offset 1912
 	 */
-	brain_pin_e runningPin;
+	brain_pin_e runningLedPin;
 	/**
 	 * offset 1916
 	 */
@@ -1746,7 +1746,7 @@ typedef struct {
 	 * TODO: start using this property
 	 * offset 2196
 	 */
-	brain_pin_e warninigPin;
+	brain_pin_e warninigLedPin;
 	/**
 	 * offset 2200
 	 */
@@ -2390,4 +2390,4 @@ typedef struct {
 
 #endif
 // end
-// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Sun Jul 22 11:54:40 EDT 2018
+// this section was generated automatically by ConfigDefinition.jar based on rusefi_config.txt Sat Aug 04 10:21:45 EDT 2018

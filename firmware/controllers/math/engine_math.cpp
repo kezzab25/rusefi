@@ -57,8 +57,8 @@ floatms_t getCrankshaftRevolutionTimeMs(int rpm) {
  *
  */
 float getEngineLoadT(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
-	efiAssert(engine!=NULL, "engine 2NULL", NAN);
-	efiAssert(engineConfiguration!=NULL, "engineConfiguration 2NULL", NAN);
+	efiAssert(CUSTOM_ERR_ASSERT, engine!=NULL, "engine 2NULL", NAN);
+	efiAssert(CUSTOM_ERR_ASSERT, engineConfiguration!=NULL, "engineConfiguration 2NULL", NAN);
 	switch (engineConfiguration->fuelAlgorithm) {
 	case LM_PLAIN_MAF:
 		if (!hasMafSensor(PASS_ENGINE_PARAMETER_SIGNATURE)) {
@@ -101,6 +101,10 @@ void setSingleCoilDwell(engine_configuration_s *engineConfiguration) {
 
 FuelSchedule::FuelSchedule() {
 	clear();
+	for (int cylinderIndex = 0; cylinderIndex < MAX_INJECTION_OUTPUT_COUNT; cylinderIndex++) {
+		InjectionEvent *ev = &elements[cylinderIndex];
+		ev->ownIndex = cylinderIndex;
+	}
 }
 
 void FuelSchedule::clear() {
@@ -111,7 +115,7 @@ void FuelSchedule::clear() {
  * @returns false in case of error, true if success
  */
 bool FuelSchedule::addFuelEventsForCylinder(int i  DECLARE_ENGINE_PARAMETER_SUFFIX) {
-	efiAssert(engine!=NULL, "engine is NULL", false);
+	efiAssert(CUSTOM_ERR_ASSERT, engine!=NULL, "engine is NULL", false);
 
 	floatus_t oneDegreeUs = ENGINE(rpmCalculator.oneDegreeUs); // local copy
 	if (cisnan(oneDegreeUs)) {
@@ -128,9 +132,9 @@ bool FuelSchedule::addFuelEventsForCylinder(int i  DECLARE_ENGINE_PARAMETER_SUFF
 	 * engineState.injectionOffset is calculated from the same utility timer should we more that logic here?
 	 */
 	floatms_t fuelMs = ENGINE(injectionDuration);
-	efiAssert(!cisnan(fuelMs), "NaN fuelMs", false);
+	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(fuelMs), "NaN fuelMs", false);
 	angle_t injectionDuration = MS2US(fuelMs) / oneDegreeUs;
-	efiAssert(!cisnan(injectionDuration), "NaN injectionDuration", false);
+	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(injectionDuration), "NaN injectionDuration", false);
 	assertAngleRange(injectionDuration, "injectionDuration_r", CUSTOM_ERR_6542);
 	floatus_t injectionOffset = ENGINE(engineState.injectionOffset);
 	if (cisnan(injectionOffset)) {
@@ -138,7 +142,7 @@ bool FuelSchedule::addFuelEventsForCylinder(int i  DECLARE_ENGINE_PARAMETER_SUFF
 		return false;
 	}
 	angle_t baseAngle = injectionOffset - injectionDuration;
-	efiAssert(!cisnan(baseAngle), "NaN baseAngle", false);
+	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(baseAngle), "NaN baseAngle", false);
 	assertAngleRange(baseAngle, "baseAngle_r", CUSTOM_ERR_6554);
 
 	int injectorIndex;
@@ -205,7 +209,7 @@ bool FuelSchedule::addFuelEventsForCylinder(int i  DECLARE_ENGINE_PARAMETER_SUFF
 		return false;
 	}
 
-	efiAssert(!cisnan(angle), "findAngle#3", false);
+	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(angle), "findAngle#3", false);
 	assertAngleRange(angle, "findAngle#a33", CUSTOM_ERR_6544);
 	TRIGGER_SHAPE(findTriggerPosition(&ev->injectionStart, angle PASS_ENGINE_PARAMETER_SUFFIX));
 #if EFI_UNIT_TEST || defined(__DOXYGEN__)
@@ -217,10 +221,10 @@ bool FuelSchedule::addFuelEventsForCylinder(int i  DECLARE_ENGINE_PARAMETER_SUFF
 void FuelSchedule::addFuelEvents(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 	clear();
 
-	for (int i = 0; i < CONFIG(specs.cylindersCount); i++) {
-		InjectionEvent *ev = &elements[i];
-		ev->ownIndex = i;
-		bool result = addFuelEventsForCylinder(i PASS_ENGINE_PARAMETER_SUFFIX);
+	for (int cylinderIndex = 0; cylinderIndex < CONFIG(specs.cylindersCount); cylinderIndex++) {
+		InjectionEvent *ev = &elements[cylinderIndex];
+		ev->ownIndex = cylinderIndex;  // todo: is this assignment needed here? we now initialize in constructor
+		bool result = addFuelEventsForCylinder(cylinderIndex PASS_ENGINE_PARAMETER_SUFFIX);
 		if (!result)
 			return;
 	}
@@ -247,7 +251,7 @@ floatms_t getSparkDwell(int rpm DECLARE_ENGINE_PARAMETER_SUFFIX) {
 	if (ENGINE(rpmCalculator).isCranking(PASS_ENGINE_PARAMETER_SIGNATURE)) {
 		dwellMs = getCrankingSparkDwell(PASS_ENGINE_PARAMETER_SIGNATURE);
 	} else {
-		efiAssert(!cisnan(rpm), "invalid rpm", NAN);
+		efiAssert(CUSTOM_ERR_ASSERT, !cisnan(rpm), "invalid rpm", NAN);
 
 		dwellMs = interpolate2d("dwell", rpm, engineConfiguration->sparkDwellRpmBins, engineConfiguration->sparkDwellValues, DWELL_CURVE_SIZE);
 	}
@@ -266,7 +270,7 @@ floatms_t getSparkDwell(int rpm DECLARE_ENGINE_PARAMETER_SUFFIX) {
 int TriggerShape::findAngleIndex(float target DECLARE_ENGINE_PARAMETER_SUFFIX) {
 	int engineCycleEventCount = TRIGGER_SHAPE(getLength());
 
-	efiAssert(engineCycleEventCount > 0, "engineCycleEventCount", 0);
+	efiAssert(CUSTOM_ERR_ASSERT, engineCycleEventCount > 0, "engineCycleEventCount", 0);
 
 	uint32_t left = 0;
 	uint32_t right = engineCycleEventCount - 1;
@@ -292,18 +296,18 @@ int TriggerShape::findAngleIndex(float target DECLARE_ENGINE_PARAMETER_SUFFIX) {
 }
 
 void TriggerShape::findTriggerPosition(event_trigger_position_s *position, angle_t angleOffset DECLARE_ENGINE_PARAMETER_SUFFIX) {
-	efiAssertVoid(!cisnan(angleOffset), "findAngle#1");
+	efiAssertVoid(CUSTOM_ERR_6574, !cisnan(angleOffset), "findAngle#1");
 	assertAngleRange(angleOffset, "findAngle#a1", CUSTOM_ERR_6545);
 
-	efiAssertVoid(!cisnan(ENGINE(triggerCentral.triggerShape.tdcPosition)), "tdcPos#1")
-	assertAngleRange(ENGINE(triggerCentral.triggerShape.tdcPosition), "tdcPos#a1", CUSTOM_ERR_6546);
+	efiAssertVoid(CUSTOM_ERR_6575, !cisnan(TRIGGER_SHAPE(tdcPosition)), "tdcPos#1")
+	assertAngleRange(TRIGGER_SHAPE(tdcPosition), "tdcPos#a1", CUSTOM_ERR_6546);
 
-	efiAssertVoid(!cisnan(CONFIG(globalTriggerAngleOffset)), "tdcPos#2")
+	efiAssertVoid(CUSTOM_ERR_6576, !cisnan(CONFIG(globalTriggerAngleOffset)), "tdcPos#2")
 	assertAngleRange(CONFIG(globalTriggerAngleOffset), "tdcPos#a2", CUSTOM_ERR_6547);
 
 	// convert engine cycle angle into trigger cycle angle
 	angleOffset += tdcPosition();
-	efiAssertVoid(!cisnan(angleOffset), "findAngle#2");
+	efiAssertVoid(CUSTOM_ERR_6577, !cisnan(angleOffset), "findAngle#2");
 	fixAngle(angleOffset, "addFuel#2", CUSTOM_ERR_6555);
 
 	int index = triggerIndexByAngle[(int)angleOffset];
@@ -404,9 +408,20 @@ static int getFiringOrderLength(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
  */
 int getCylinderId(int index DECLARE_ENGINE_PARAMETER_SUFFIX) {
 
-	const int foLength = getFiringOrderLength(PASS_ENGINE_PARAMETER_SIGNATURE);
-	if (engineConfiguration->specs.cylindersCount != foLength) {
-		warning(CUSTOM_OBD_WRONG_FIRING_ORDER, "Wrong firing order %d/%d", engineConfiguration->specs.cylindersCount, foLength);
+	const int firingOrderLength = getFiringOrderLength(PASS_ENGINE_PARAMETER_SIGNATURE);
+
+	if (firingOrderLength < 1 || firingOrderLength > INJECTION_PIN_COUNT) {
+		firmwareError(CUSTOM_ERR_6687, "fol %d", firingOrderLength);
+		return 1;
+	}
+	if (engineConfiguration->specs.cylindersCount != firingOrderLength) {
+		warning(CUSTOM_OBD_WRONG_FIRING_ORDER, "Wrong firing order %d/%d", engineConfiguration->specs.cylindersCount, firingOrderLength);
+		return 1;
+	}
+
+	if (index < 0 || index >= firingOrderLength) {
+		// todo: open question when does this happen? reproducible with functional tests?
+		warning(CUSTOM_ERR_6686, "index %d", index);
 		return 1;
 	}
 

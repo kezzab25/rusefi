@@ -382,7 +382,7 @@ void prepareVoidConfiguration(engine_configuration_s *engineConfiguration) {
 
 void setDefaultBasePins(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 	engineConfiguration->fatalErrorPin = GPIOD_14;
-	engineConfiguration->warninigPin = GPIOD_13;
+	engineConfiguration->warninigLedPin = GPIOD_13;
 	engineConfiguration->configResetPin = GPIOB_1;
 #if EFI_PROD_CODE || defined(__DOXYGEN__)
 	// call overrided board-specific serial configuration setup, if needed (for custom boards only)
@@ -951,8 +951,8 @@ void setDefaultConfiguration(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 
 	engineConfiguration->alternatorPwmFrequency = 300;
 
-	engineConfiguration->communicationPin = GPIOD_15; // blue LED on discovery
-	engineConfiguration->runningPin = GPIOD_12; // greeb LED on discovery
+	engineConfiguration->communicationLedPin = GPIOD_15; // blue LED on discovery
+	engineConfiguration->runningLedPin = GPIOD_12; // greeb LED on discovery
 	setDefaultBasePins(PASS_ENGINE_PARAMETER_SIGNATURE);
 	
 	setDefaultSerialParameters(PASS_ENGINE_PARAMETER_SIGNATURE);
@@ -971,6 +971,8 @@ void setDefaultConfiguration(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 
 	engineConfiguration->hip9011SpiDevice = SPI_DEVICE_2;
 	engineConfiguration->cj125SpiDevice = SPI_DEVICE_2;
+
+	engineConfiguration->cj125isUaDivided = true;
 
 	engineConfiguration->isAlternatorControlEnabled = true;
 
@@ -1301,14 +1303,14 @@ void validateConfiguration(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 
 void applyNonPersistentConfiguration(Logging * logger DECLARE_ENGINE_PARAMETER_SUFFIX) {
 #if EFI_PROD_CODE || defined(__DOXYGEN__)
-	efiAssertVoid(getRemainingStack(chThdGetSelfX()) > 256, "apply c");
+	efiAssertVoid(CUSTOM_ERR_6620, getRemainingStack(chThdGetSelfX()) > 256, "apply c");
 	scheduleMsg(logger, "applyNonPersistentConfiguration()");
 #endif
 
 	assertEngineReference();
 
 #if EFI_ENGINE_CONTROL || defined(__DOXYGEN__)
-	engine->triggerCentral.triggerShape.initializeTriggerShape(logger PASS_ENGINE_PARAMETER_SUFFIX);
+	TRIGGER_SHAPE(initializeTriggerShape(logger PASS_ENGINE_PARAMETER_SUFFIX));
 #endif
 
 #if EFI_FSIO || defined(__DOXYGEN__)

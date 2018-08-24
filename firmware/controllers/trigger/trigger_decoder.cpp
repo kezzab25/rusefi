@@ -181,7 +181,7 @@ void TriggerState::onSynchronizationLost(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
  * @param nowNt current time
  */
 void TriggerState::decodeTriggerEvent(trigger_event_e const signal, efitime_t nowNt DECLARE_ENGINE_PARAMETER_SUFFIX) {
-	efiAssertVoid(signal <= SHAFT_3RD_RISING, "unexpected signal");
+	efiAssertVoid(CUSTOM_ERR_6640, signal <= SHAFT_3RD_RISING, "unexpected signal");
 
 	trigger_wheel_e triggerWheel = eventIndex[signal];
 	trigger_value_e type = eventType[signal];
@@ -456,7 +456,7 @@ void TriggerShape::initializeTriggerShape(Logging *logger DECLARE_ENGINE_PARAMET
 #endif /* EFI_UNIT_TEST */
 
 #if EFI_PROD_CODE || defined(__DOXYGEN__)
-	efiAssertVoid(getRemainingStack(chThdGetSelfX()) > 256, "init t");
+	efiAssertVoid(CUSTOM_ERR_6641, getRemainingStack(chThdGetSelfX()) > 256, "init t");
 	scheduleMsg(logger, "initializeTriggerShape(%s/%d)", getTrigger_type_e(triggerConfig->type), (int) triggerConfig->type);
 #endif
 
@@ -672,11 +672,11 @@ static void onFindIndexCallback(TriggerState *state) {
 uint32_t findTriggerZeroEventIndex(TriggerState *state, TriggerShape * shape,
 		trigger_config_s const*triggerConfig DECLARE_ENGINE_PARAMETER_SUFFIX) {
 #if EFI_PROD_CODE || defined(__DOXYGEN__)
-	efiAssert(getRemainingStack(chThdGetSelfX()) > 128, "findPos", -1);
+	efiAssert(CUSTOM_ERR_ASSERT, getRemainingStack(chThdGetSelfX()) > 128, "findPos", -1);
 #endif
 	isInitializingTrigger = true;
 	errorDetection.clear();
-	efiAssert(state != NULL, "NULL state", -1);
+	efiAssert(CUSTOM_ERR_ASSERT, state != NULL, "NULL state", -1);
 
 	state->reset();
 
@@ -692,7 +692,7 @@ uint32_t findTriggerZeroEventIndex(TriggerState *state, TriggerShape * shape,
 		isInitializingTrigger = false;
 		return syncIndex;
 	}
-	efiAssert(state->getTotalRevolutionCounter() == 1, "findZero_revCounter", EFI_ERROR_CODE);
+	efiAssert(CUSTOM_ERR_ASSERT, state->getTotalRevolutionCounter() == 1, "findZero_revCounter", EFI_ERROR_CODE);
 
 #if EFI_UNIT_TEST || defined(__DOXYGEN__)
 	if (printTriggerDebug) {

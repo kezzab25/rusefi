@@ -56,7 +56,7 @@
 #define MAP_ACCEL_TAPER 8
 #define BARO_CORR_SIZE 4
 #define MAF_DECODING_COUNT 256
-#define debug_mode_e_enum "Alternator_PID", "TPS accel enrich", "Warmup PID", "IDLE", "EL accl enrich", "Trigger Counters", "FSIO_ADC", "AUX_PID_1", "VVT PID", "Cranking", "Timing", "Closed-loop fuel corr PID", "VSS", "SD card", "sr5", "Knock", "Trigger Sync", "Electronic Throttle", "Executor", "Bench Test", "Aux Valves", "ADC", "INSTANT_RPM", "FSIO_EXPRESSION", "Status", "CJ125", "CAN", "MAP", "mode28", "mode29"
+#define debug_mode_e_enum "Alternator_PID", "TPS accel enrich", "Warmup PID", "IDLE", "EL accl enrich", "Trigger Counters", "FSIO_ADC", "AUX_PID_1", "VVT input", "Cranking", "Timing", "Closed-loop fuel corr PID", "VSS", "SD card", "sr5", "Knock", "Trigger Sync", "Electronic Throttle", "Executor", "Bench Test", "Aux Valves", "ADC", "INSTANT_RPM", "FSIO_EXPRESSION", "Status", "CJ125", "CAN", "MAP", "mode28", "mode29"
 #define vvt_mode_e_enum "First half", "Second half", "2GZ", "Miata NB2", "mode4", "mode5", "mode6", "mode7"
 #define mass_storage_e_enum "Auto", "Always", "Never"
 #define brain_input_pin_e_enum "INVALID", "PA1", "PA2", "PA3", "INVALID", "PA5", "PA6", "PA7", "PA8", "PA9", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PA15", "INVALID", "INVALID", "INVALID", "PB3", "PB4", "PB5", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PC6", "PC7", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "PE5", "PE6", "INVALID", "INVALID", "PE9", "INVALID", "PE11", "INVALID", "INVALID", "INVALID", "INVALID", "NONE", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID", "INVALID"
@@ -104,8 +104,8 @@
 #define useBiQuadAnalogFiltering_offset_hex 4c
 #define cj125isUaDivided_offset 76
 #define cj125isUaDivided_offset_hex 4c
-#define issue_294_11_offset 76
-#define issue_294_11_offset_hex 4c
+#define cj125isLsu49_offset 76
+#define cj125isLsu49_offset_hex 4c
 #define issue_294_12_offset 76
 #define issue_294_12_offset_hex 4c
 #define issue_294_13_offset 76
@@ -918,8 +918,8 @@
 #define useFSIO11ForServo4_offset_hex 5c0
 #define useFSIO12ForServo5_offset 1472
 #define useFSIO12ForServo5_offset_hex 5c0
-#define unused_bit_1472_26_offset 1472
-#define unused_bit_1472_26_offset_hex 5c0
+#define useFSIO15ForIdleRpmAdjustment_offset 1472
+#define useFSIO15ForIdleRpmAdjustment_offset_hex 5c0
 #define unused_bit_1472_27_offset 1472
 #define unused_bit_1472_27_offset_hex 5c0
 #define hipOutputChannel_offset 1476
@@ -1136,10 +1136,10 @@
 #define idleRpmPid_maxValue_offset_hex 76e
 #define addedToWallCoef_offset 1904
 #define addedToWallCoef_offset_hex 770
-#define communicationPin_offset 1908
-#define communicationPin_offset_hex 774
-#define runningPin_offset 1912
-#define runningPin_offset_hex 778
+#define communicationLedPin_offset 1908
+#define communicationLedPin_offset_hex 774
+#define runningLedPin_offset 1912
+#define runningLedPin_offset_hex 778
 #define binarySerialTxPin_offset 1916
 #define binarySerialTxPin_offset_hex 77c
 #define binarySerialRxPin_offset 1920
@@ -1196,8 +1196,8 @@
 #define engineLoadAccelEnrichmentMultiplier_offset_hex 88c
 #define fatalErrorPin_offset 2192
 #define fatalErrorPin_offset_hex 890
-#define warninigPin_offset 2196
-#define warninigPin_offset_hex 894
+#define warninigLedPin_offset 2196
+#define warninigLedPin_offset_hex 894
 #define configResetPin_offset 2200
 #define configResetPin_offset_hex 898
 #define uartConsoleSerialSpeed_offset 2204
