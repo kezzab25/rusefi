@@ -7,7 +7,7 @@
  * @author Andrey Belomutskiy, (c) 2012-2018
  */
 
-#include <main.h>
+#include "global.h"
 
 #include "flash_main.h"
 #include "eficonsole.h"
@@ -25,8 +25,6 @@
 #if EFI_INTERNAL_FLASH || defined(__DOXYGEN__)
 
 #include "engine_controller.h"
-#include "datalogging.h"
-#include "engine.h"
 
 static bool needToWriteConfiguration = false;
 

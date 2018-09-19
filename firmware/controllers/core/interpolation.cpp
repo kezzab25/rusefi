@@ -10,12 +10,7 @@
  * @author Dmitry Sidin, (c) 2015
  */
 
-#include "main.h"
-#if DEBUG_FUEL
-#include <stdio.h>
-#endif
-
-#include <math.h>
+#include "global.h"
 
 #include "efilib2.h"
 #include "interpolation.h"

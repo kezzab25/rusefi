@@ -6,7 +6,7 @@
  * @author Andrey Belomutskiy, (c) 2012-2018
  */
 
-#include "main.h"
+#include "global.h"
 
 #if EFI_SHAFT_POSITION_INPUT || defined(__DOXYGEN__)
 
@@ -431,7 +431,6 @@ static void triggerShapeInfo(void) {
 }
 
 #if EFI_UNIT_TEST || defined(__DOXYGEN__)
-#include <stdio.h>
 #include <stdlib.h>
 
 #define TRIGGERS_FILE_NAME "triggers.txt"
