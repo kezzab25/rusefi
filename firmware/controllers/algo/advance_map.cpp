@@ -32,6 +32,8 @@ extern TunerStudioOutputChannels tsOutputChannels;
 #endif
 
 static ign_Map3D_t advanceMap("advance");
+// This coeff in ctor parameter is sufficient for int16<->float conversion!
+static ign_tps_Map3D_t advanceTpsMap("advanceTps", 1.0 / ADVANCE_TPS_STORAGE_MULT);
 static ign_Map3D_t iatAdvanceCorrectionMap("iat corr");
 
 static int minCrankingRpm = 0;
@@ -81,8 +83,14 @@ static angle_t getRunningAdvance(int rpm, float engineLoad DECLARE_ENGINE_PARAME
 	if (isStep1Condition(rpm PASS_ENGINE_PARAMETER_SUFFIX)) {
 		return engineConfiguration->step1timing;
 	}
-
-	float advanceAngle = advanceMap.getValue((float) rpm, engineLoad);
+	
+	float advanceAngle;
+	if (CONFIG(useTPSAdvanceTable)) {
+		float tps = getTPS(PASS_ENGINE_PARAMETER_SIGNATURE);
+		advanceAngle = advanceTpsMap.getValue((float) rpm, tps);
+	} else {
+		advanceAngle = advanceMap.getValue((float) rpm, engineLoad);
+	}
 	
 	// get advance from the separate table for Idle
 	if (CONFIG(useSeparateAdvanceForIdle)) {
@@ -147,6 +155,7 @@ angle_t getAdvance(int rpm, float engineLoad DECLARE_ENGINE_PARAMETER_SUFFIX) {
 		efiAssert(CUSTOM_ERR_ASSERT, !cisnan(angle), "cr_AngleN", 0);
 		if (CONFIG(useAdvanceCorrectionsForCranking))
 			angle += getAdvanceCorrections(rpm PASS_ENGINE_PARAMETER_SUFFIX);
+		efiAssert(CUSTOM_ERR_ASSERT, !cisnan(angle), "cr_AngleN2", 0);
 	} else {
 		angle = getRunningAdvance(rpm, engineLoad PASS_ENGINE_PARAMETER_SUFFIX);
 		if (cisnan(angle)) {
@@ -154,8 +163,11 @@ angle_t getAdvance(int rpm, float engineLoad DECLARE_ENGINE_PARAMETER_SUFFIX) {
 			return 0;
 		}
 		angle += getAdvanceCorrections(rpm PASS_ENGINE_PARAMETER_SUFFIX);
+		efiAssert(CUSTOM_ERR_ASSERT, !cisnan(angle), "AngleN3", 0);
 	}
+	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(angle), "_AngleN4", 0);
 	angle -= engineConfiguration->ignitionOffset;
+	efiAssert(CUSTOM_ERR_ASSERT, !cisnan(angle), "_AngleN5", 0);
 	fixAngle(angle, "getAdvance", CUSTOM_ERR_6548);
 	return angle;
 }
@@ -167,7 +179,10 @@ void setDefaultIatTimingCorrection(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
 }
 
 void prepareTimingMap(DECLARE_ENGINE_PARAMETER_SIGNATURE) {
+	// We init both tables in RAM because here we're at a very early stage, with no config settings loaded.
 	advanceMap.init(config->ignitionTable, config->ignitionLoadBins,
+			config->ignitionRpmBins);
+	advanceTpsMap.init(CONFIG(ignitionTpsTable), CONFIG(ignitionTpsBins),
 			config->ignitionRpmBins);
 	iatAdvanceCorrectionMap.init(config->ignitionIatCorrTable, config->ignitionIatCorrLoadBins,
 			config->ignitionIatCorrRpmBins);
