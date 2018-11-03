@@ -29,6 +29,8 @@
 #include "eficonsole.h"
 #endif /* __cplusplus */
 
+#define efiSetPadMode(msg, brainPin, mode) {}
+
 #define EFI_UNIT_TEST FALSE
 
 #define hasFatalError() (FALSE)
@@ -109,7 +111,6 @@ void applyNewConfiguration(void);
 
 #define CONFIG(x) persistentState.persistentConfiguration.engineConfiguration.x
 #define ENGINE(x) engine->x
-#define TRIGGER_SHAPE(x) engine->triggerCentral.triggerShape.x
 
 #endif /* GLOBAL_H_ */
 

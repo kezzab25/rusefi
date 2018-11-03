@@ -124,7 +124,7 @@ gap=1.43/0.71
 
 	// these values only work well for 'useFronOnly' mode!!!
 	s->setTriggerSynchronizationGap2(0.75, 1.5);
-	s->setSecondTriggerSynchronizationGap2(0.65, 1.25);
+	s->setTriggerSynchronizationGap3(1, 0.65, 1.25);
 
 	float EPS_ANGLE = 0.3;
 
@@ -542,5 +542,41 @@ void initJeep18_2_2_2(TriggerShape *s DECLARE_ENGINE_PARAMETER_SUFFIX) {
 	s->addEvent2(476 + off, T_SECONDARY, TV_FALL PASS_ENGINE_PARAMETER_SUFFIX);
 
 	s->addEvent2(508 + off, T_PRIMARY, TV_FALL PASS_ENGINE_PARAMETER_SUFFIX); // 720
+
+}
+
+static void add4cylblock(int off, TriggerShape *s DECLARE_ENGINE_PARAMETER_SUFFIX) {
+	s->addEvent2(114 + off, T_SECONDARY, TV_RISE PASS_ENGINE_PARAMETER_SUFFIX);
+	s->addEvent2(114 + off + 2, T_SECONDARY, TV_FALL PASS_ENGINE_PARAMETER_SUFFIX);
+
+	s->addEvent2(134 + off, T_SECONDARY, TV_RISE PASS_ENGINE_PARAMETER_SUFFIX);
+	s->addEvent2(134 + off + 2, T_SECONDARY, TV_FALL PASS_ENGINE_PARAMETER_SUFFIX);
+
+	s->addEvent2(154 + off, T_SECONDARY, TV_RISE PASS_ENGINE_PARAMETER_SUFFIX);
+	s->addEvent2(154 + off + 2, T_SECONDARY, TV_FALL PASS_ENGINE_PARAMETER_SUFFIX);
+
+	s->addEvent2(174 + off, T_SECONDARY, TV_RISE PASS_ENGINE_PARAMETER_SUFFIX);
+	s->addEvent2(174 + off + 2, T_SECONDARY, TV_FALL PASS_ENGINE_PARAMETER_SUFFIX);
+}
+
+// TT_JEEP_4_CYL
+void initJeep_XJ_4cyl_2500(TriggerShape *s DECLARE_ENGINE_PARAMETER_SUFFIX) {
+	s->initialize(FOUR_STROKE_CAM_SENSOR, true);
+	s->isSynchronizationNeeded = true;
+	s->setTriggerSynchronizationGap(1);
+	s->useOnlyPrimaryForSync = true;
+	s->tdcPosition = 720 - 236;
+
+	float offset = 124;
+
+	add4cylblock(offset - 180, s PASS_ENGINE_PARAMETER_SUFFIX);
+	add4cylblock(offset, s PASS_ENGINE_PARAMETER_SUFFIX);
+
+	s->addEvent2(236 + offset, T_PRIMARY, TV_RISE PASS_ENGINE_PARAMETER_SUFFIX); // 360
+
+	add4cylblock(offset + 180, s PASS_ENGINE_PARAMETER_SUFFIX);
+	add4cylblock(offset + 360, s PASS_ENGINE_PARAMETER_SUFFIX);
+
+	s->addEvent2(596 + offset, T_PRIMARY, TV_FALL PASS_ENGINE_PARAMETER_SUFFIX); // 720
 
 }

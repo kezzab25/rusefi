@@ -422,7 +422,7 @@ static void triggerShapeInfo(void) {
 #if (EFI_PROD_CODE || EFI_SIMULATOR) || defined(__DOXYGEN__)
 	TriggerShape *s = &engine->triggerCentral.triggerShape;
 	scheduleMsg(logger, "useRise=%s", boolToString(TRIGGER_SHAPE(useRiseEdge)));
-	scheduleMsg(logger, "gap from %.2f to %.2f", TRIGGER_SHAPE(syncRatioFrom), TRIGGER_SHAPE(syncRatioTo));
+	scheduleMsg(logger, "gap from %.2f to %.2f", TRIGGER_SHAPE(syncronizationRatioFrom[0]), TRIGGER_SHAPE(syncronizationRatioTo[0]));
 
 	for (int i = 0; i < s->getSize(); i++) {
 		scheduleMsg(logger, "event %d %.2f", i, s->eventAngles[i]);
@@ -467,7 +467,10 @@ void printAllTriggers() {
 		TriggerShape *s = &engine->triggerCentral.triggerShape;
 		s->initializeTriggerShape(NULL PASS_ENGINE_PARAMETER_SUFFIX);
 
-		efiAssertVoid(CUSTOM_ERR_6639, !s->shapeDefinitionError, "trigger error");
+		if (s->shapeDefinitionError) {
+			printf("Trigger error %d\r\n", triggerId);
+			exit(-1);
+		}
 
 		fprintf(fp, "TRIGGERTYPE %d %d %s %.2f\n", triggerId, s->getLength(), getTrigger_type_e(tt), s->tdcPosition);
 
@@ -562,7 +565,7 @@ void triggerInfo(void) {
 			boolToString(engineConfiguration->directSelfStimulation));
 
 	if (TRIGGER_SHAPE(isSynchronizationNeeded)) {
-		scheduleMsg(logger, "gap from %.2f to %.2f", ts->syncRatioFrom, ts->syncRatioTo);
+		scheduleMsg(logger, "gap from %.2f to %.2f", TRIGGER_SHAPE(syncronizationRatioFrom[0]), TRIGGER_SHAPE(syncronizationRatioTo[0]));
 	}
 
 #endif /* EFI_PROD_CODE || EFI_SIMULATOR */

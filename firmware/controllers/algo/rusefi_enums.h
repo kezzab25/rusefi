@@ -271,6 +271,7 @@ typedef enum {
 
 	TT_SUBARU_7_6 = 36,
 
+	// this one is 6 cylinder, see TT_JEEP_4_cyl for 4 cylinders
 	TT_JEEP_18_2_2_2 = 37,
 
 	/*
@@ -280,7 +281,14 @@ typedef enum {
 
 	TT_DODGE_NEON_1995_ONLY_CRANK = 39,
 
-	TT_UNUSED = 40, // this is used if we want to iterate over all trigger types
+	// Jeep XJ 2500cc 4 cylinder. See also TT_JEEP_18_2_2_2 for 6 cylinders
+	TT_JEEP_4_CYL = 40,
+
+	// magneti marelli Fiat/Lancia IAW P8 from the 90', 2.0 16 v turbo engine - Lancia Coupe
+	// https://rusefi.com/forum/viewtopic.php?f=5&t=1440
+	TT_FIAT_IAW_P8 = 41,
+
+	TT_UNUSED = 42, // this is used if we want to iterate over all trigger types
 
 	Force_4_bytes_size_trigger_type = ENUM_32_BITS,
 } trigger_type_e;
@@ -764,7 +772,10 @@ typedef enum {
 	DBG_SR5_PROTOCOL = 14,
 	DBG_KNOCK = 15,
 	DBG_TRIGGER_SYNC = 16,
-	DBG_ELECTRONIC_THROTTLE = 17,
+	/**
+	 * See also DBG_ELECTRONIC_THROTTLE_EXTRA
+	 */
+	DBG_ELECTRONIC_THROTTLE_PID = 17,
 	DBG_EXECUTOR = 18,
 	DBG_BENCH_TEST = 19,
 	DBG_AUX_VALVES = 20,
@@ -777,7 +788,7 @@ typedef enum {
 	DBG_CAN = 26,
 	DBG_MAP = 27,
 	DBG_METRICS = 28,
-	DBG_29 = 29,
+	DBG_ELECTRONIC_THROTTLE_EXTRA = 29,
 	DBG_30 = 30,
 	DBG_31 = 31,
 	DBG_32 = 32,

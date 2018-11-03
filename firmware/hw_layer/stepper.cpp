@@ -20,11 +20,17 @@ static Logging *logger;
 
 static void saveStepperPos(int pos) {
 	// use backup-power RTC registers to store the data
+#if EFI_PROD_CODE || defined(__DOXYGEN__)
 	backupRamSave(BACKUP_STEPPER_POS, pos + 1);
+#endif
 }
 
 static int loadStepperPos() {
+#if EFI_PROD_CODE || defined(__DOXYGEN__)
 	return (int)backupRamLoad(BACKUP_STEPPER_POS) - 1;
+#else
+	return 0;
+#endif
 }
 
 static msg_t stThread(StepperMotor *motor) {
@@ -33,8 +39,10 @@ static msg_t stThread(StepperMotor *motor) {
 	// try to get saved stepper position (-1 for no data)
 	motor->currentPosition = loadStepperPos();
 
+#if EFI_PROD_CODE || defined(__DOXYGEN__)
 	// first wait until at least 1 slowADC sampling is complete
 	waitForSlowAdc();
+#endif
 	// now check if stepper motor re-initialization is requested - if the throttle pedal is pressed at startup
 	bool forceStepperParking = !engine->rpmCalculator.isRunning(PASS_ENGINE_PARAMETER_SIGNATURE) && getTPS(PASS_ENGINE_PARAMETER_SIGNATURE) > STEPPER_PARKING_TPS;
 	if (boardConfiguration->stepperForceParkingEveryRestart)
@@ -84,7 +92,9 @@ static msg_t stThread(StepperMotor *motor) {
 		}
 		motor->pulse();
 		// save position to backup RTC register
+#if EFI_PROD_CODE || defined(__DOXYGEN__)
 		saveStepperPos(motor->currentPosition);
+#endif
 	}
 
 	// let's part the motor in a known position to begin with
@@ -146,14 +156,18 @@ void StepperMotor::initialize(brain_pin_e stepPin, brain_pin_e directionPin, pin
 		return;
 	}
 
+#if EFI_PROD_CODE || defined(__DOXYGEN__)
 	stepPort = getHwPort("step", stepPin);
 	this->stepPin = getHwPin("step", stepPin);
+#endif /* EFI_PROD_CODE */
 
 	this->directionPinMode = directionPinMode;
 	this->directionPin.initPin("stepper dir", directionPin, &this->directionPinMode);
 
+#if EFI_PROD_CODE || defined(__DOXYGEN__)
 	enablePort = getHwPort("enable", enablePin);
 	this->enablePin = getHwPin("enable", enablePin);
+#endif /* EFI_PROD_CODE */
 
 	efiSetPadMode("stepper step", stepPin, PAL_MODE_OUTPUT_PUSHPULL);
 	efiSetPadMode("stepper enable", enablePin, PAL_MODE_OUTPUT_PUSHPULL);

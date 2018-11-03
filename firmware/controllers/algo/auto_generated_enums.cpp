@@ -179,6 +179,8 @@ case TT_FORD_ASPIRE:
   return "TT_FORD_ASPIRE";
 case TT_GM_7X:
   return "TT_GM_7X";
+case TT_FIAT_IAW_P8:
+  return "TT_FIAT_IAW_P8";
 case TT_GM_LS_24:
   return "TT_GM_LS_24";
 case TT_HONDA_1_24:
@@ -197,6 +199,8 @@ case TT_HONDA_CBR_600_CUSTOM:
   return "TT_HONDA_CBR_600_CUSTOM";
 case TT_JEEP_18_2_2_2:
   return "TT_JEEP_18_2_2_2";
+case TT_JEEP_4_CYL:
+	return "TT_JEEP_4_CYL";
 case TT_MAZDA_DOHC_1_4:
   return "TT_MAZDA_DOHC_1_4";
 case TT_MAZDA_MIATA_NA:
@@ -738,8 +742,8 @@ case DBG_MAP:
   return "DBG_MAP";
 case DBG_METRICS:
   return "DBG_METRICS";
-case DBG_29:
-  return "DBG_29";
+case DBG_ELECTRONIC_THROTTLE_EXTRA:
+  return "DBG_ELECTRONIC_THROTTLE_EXTRA";
 case DBG_ADC:
   return "DBG_ADC";
 case DBG_ALTERNATOR_PID:
@@ -752,8 +756,8 @@ case DBG_BENCH_TEST:
   return "DBG_BENCH_TEST";
 case DBG_CRANKING_DETAILS:
   return "DBG_CRANKING_DETAILS";
-case DBG_ELECTRONIC_THROTTLE:
-  return "DBG_ELECTRONIC_THROTTLE";
+case DBG_ELECTRONIC_THROTTLE_PID:
+  return "DBG_ELECTRONIC_THROTTLE_PID";
 case DBG_EL_ACCEL:
   return "DBG_EL_ACCEL";
 case DBG_EXECUTOR:

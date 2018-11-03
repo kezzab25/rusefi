@@ -94,6 +94,7 @@ endif
 
 include $(PROJECT_DIR)/util/util.mk
 include $(PROJECT_DIR)/config/engines/engines.mk
+include $(PROJECT_DIR)/controllers/controllers.mk
 include $(PROJECT_DIR)/controllers/algo/algo.mk
 include $(PROJECT_DIR)/controllers/core/core.mk
 include $(PROJECT_DIR)/controllers/math/math.mk
@@ -124,18 +125,14 @@ CSRC =  ${PORTSRC} \
         $(UTILSRC) \
         main.c
 
-# todo: reuse controllers.mk here 
 # C++ sources that can be compiled in ARM or THUMB mode depending on the global
 # setting.
 CPPSRC = $(UTILSRC_CPP) \
 	$(CONTROLLERS_ALGO_SRC_CPP) \
-	$(PROJECT_DIR)/controllers/settings.cpp \
-	$(PROJECT_DIR)/controllers/engine_controller.cpp \
-	$(PROJECT_DIR)/controllers/error_handling.cpp \
-	$(PROJECT_DIR)/controllers/persistent_store.cpp \
-	$(PROJECT_DIR)/controllers/map_averaging.cpp \
+	$(CONTROLLERS_SRC_CPP) \
 	$(PROJECT_DIR)/development/sensor_chart.cpp \
 	$(PROJECT_DIR)/development/trigger_emulator.cpp \
+	$(PROJECT_DIR)/hw_layer/stepper.cpp \
 	$(TRIGGER_SRC_CPP) \
 	$(TRIGGER_DECODERS_SRC_CPP) \
 	$(SYSTEMSRC_CPP) \

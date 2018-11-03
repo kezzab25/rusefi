@@ -45,6 +45,8 @@ private:
 class Engine;
 class TriggerState;
 
+#define GAP_TRACKING_LENGTH 4
+
 /**
  * @brief Trigger shape has all the fields needed to describe and decode trigger signal.
  * @see TriggerState for trigger decoder state which works based on this trigger shape model
@@ -89,22 +91,23 @@ public:
 	 */
 	int triggerIndexByAngle[720];
 
-	float syncRatioFrom;
-	float syncRatioTo;
+
+	/**
+	 * Depending on trigger shape, we use betweeb one and three previous gap ranges to detect synchronizaiton.
+	 *
+	 * Usually second or third gap is not needed, but some crazy triggers like 36-2-2-2 require two consecutive
+	 * gaps ratios to sync
+	 */
+
+	float syncronizationRatioFrom[GAP_TRACKING_LENGTH];
+	float syncronizationRatioTo[GAP_TRACKING_LENGTH];
+
+
 	/**
 	 * used by NoiselessTriggerDecoder (See TriggerCentral::handleShaftSignal())
 	 */
 	int syncRatioAvg;
 
-	/**
-	 * Usually this is not needed, but some crazy triggers like 36-2-2-2 require two consecutive
-	 * gaps ratios to sync
-	 */
-	float secondSyncRatioFrom;
-	float secondSyncRatioTo;
-
-	float thirdSyncRatioFrom;
-	float thirdSyncRatioTo;
 
 	/**
 	 * Trigger indexes within trigger cycle are counted from synchronization point, and all
@@ -175,11 +178,11 @@ public:
 
 	void initialize(operation_mode_e operationMode, bool needSecondTriggerInput);
 	void setTriggerSynchronizationGap(float syncRatio);
+	void setTriggerSynchronizationGap3(int index, float syncRatioFrom, float syncRatioTo);
 	void setTriggerSynchronizationGap2(float syncRatioFrom, float syncRatioTo);
 	void setSecondTriggerSynchronizationGap(float syncRatio);
 	void setSecondTriggerSynchronizationGap2(float syncRatioFrom, float syncRatioTo);
 	void setThirdTriggerSynchronizationGap(float syncRatio);
-	void setThirdTriggerSynchronizationGap2(float syncRatioFrom, float syncRatioTo);
 	/**
 	 * this one is per CRANKshaft revolution
 	 */
@@ -229,5 +232,7 @@ private:
 };
 
 void setToothedWheelConfiguration(TriggerShape *s, int total, int skipped, operation_mode_e operationMode DECLARE_ENGINE_PARAMETER_SUFFIX);
+
+#define TRIGGER_SHAPE(x) ENGINE(triggerCentral.triggerShape.x)
 
 #endif /* TRIGGER_STRUCTURE_H_ */

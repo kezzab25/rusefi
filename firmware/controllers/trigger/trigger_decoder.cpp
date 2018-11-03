@@ -43,6 +43,7 @@
 #include "trigger_central.h"
 #include "trigger_simulator.h"
 #include "trigger_universal.h"
+#include "trigger_misc.h"
 #include "rfiutil.h"
 
 #if EFI_SENSOR_CHART || defined(__DOXYGEN__)
@@ -129,14 +130,14 @@ void TriggerState::reset() {
 	triggerCycleCallback = NULL;
 	shaft_is_synchronized = false;
 	toothed_previous_time = 0;
-	toothed_previous_duration = 0;
-	durationBeforePrevious = 0;
-	thirdPreviousDuration = 0;
+
+	memset(toothDurations, 0, sizeof(toothDurations));
 
 	totalRevolutionCounter = 0;
 	totalTriggerErrorCounter = 0;
 	orderingErrorCounter = 0;
-	currentDuration = 0;
+
+	memset(toothDurations, 0, sizeof(toothDurations));
 	curSignal = SHAFT_PRIMARY_FALLING;
 	prevSignal = SHAFT_PRIMARY_FALLING;
 	startOfCycleNt = 0;
@@ -202,7 +203,7 @@ void TriggerState::decodeTriggerEvent(trigger_event_e const signal, efitime_t no
 	 * For performance reasons, we want to work with 32 bit values. If there has been more then
 	 * 10 seconds since previous trigger event we do not really care.
 	 */
-	currentDuration =
+	toothDurations[0] =
 			currentDurationLong > 10 * US2NT(US_PER_SECOND_LL) ? 10 * US2NT(US_PER_SECOND_LL) : currentDurationLong;
 
 	bool isPrimary = triggerWheel == T_PRIMARY;
@@ -238,12 +239,12 @@ void TriggerState::decodeTriggerEvent(trigger_event_e const signal, efitime_t no
 // todo: skip a number of signal from the beginning
 
 #if EFI_PROD_CODE || defined(__DOXYGEN__)
-//	scheduleMsg(&logger, "from %.2f to %.2f %d %d", triggerConfig->syncRatioFrom, triggerConfig->syncRatioTo, currentDuration, shaftPositionState->toothed_previous_duration);
-//	scheduleMsg(&logger, "ratio %.2f", 1.0 * currentDuration/ shaftPositionState->toothed_previous_duration);
+//	scheduleMsg(&logger, "from %.2f to %.2f %d %d", triggerConfig->syncRatioFrom, triggerConfig->syncRatioTo, toothDurations[0], shaftPositionState->toothDurations[1]);
+//	scheduleMsg(&logger, "ratio %.2f", 1.0 * toothDurations[0]/ shaftPositionState->toothDurations[1]);
 #else
 		if (printTriggerDebug) {
-			printf("ratio %.2f: current=%d previous=%d\r\n", 1.0 * currentDuration / toothed_previous_duration,
-				currentDuration, toothed_previous_duration);
+			printf("ratio %.2f: current=%d previous=%d\r\n", 1.0 * toothDurations[0] / toothDurations[1],
+					toothDurations[0], toothDurations[1]);
 		}
 #endif
 
@@ -253,49 +254,60 @@ void TriggerState::decodeTriggerEvent(trigger_event_e const signal, efitime_t no
 			// this is getting a little out of hand, any ideas?
 
 			if (CONFIG(debugMode) == DBG_TRIGGER_SYNC) {
-				float currentGap = 1.0 * currentDuration / toothed_previous_duration;
 #if ! EFI_UNIT_TEST || defined(__DOXYGEN__)
+				float currentGap = 1.0 * toothDurations[0] / toothDurations[1];
 				tsOutputChannels.debugFloatField1 = currentGap;
 				tsOutputChannels.debugFloatField2 = currentCycle.current_index;
 #endif /* EFI_UNIT_TEST */
 			}
 
-			bool primaryGap = currentDuration > toothed_previous_duration * TRIGGER_SHAPE(syncRatioFrom)
-				&& currentDuration < toothed_previous_duration * TRIGGER_SHAPE(syncRatioTo);
+			bool isGapCondition[GAP_TRACKING_LENGTH];
 
-			bool secondaryGap = cisnan(TRIGGER_SHAPE(secondSyncRatioFrom)) || (toothed_previous_duration > durationBeforePrevious * TRIGGER_SHAPE(secondSyncRatioFrom)
-			&& toothed_previous_duration < durationBeforePrevious * TRIGGER_SHAPE(secondSyncRatioTo));
+			for (int i = 0;i<GAP_TRACKING_LENGTH;i++) {
+				isGapCondition[i] = cisnan(TRIGGER_SHAPE(syncronizationRatioFrom[i])) || (toothDurations[i] > toothDurations[i + 1] * TRIGGER_SHAPE(syncronizationRatioFrom[i])
+					&& toothDurations[i] < toothDurations[i + 1] * TRIGGER_SHAPE(syncronizationRatioTo[i]));
+			}
 
-			bool thirdGap = cisnan(TRIGGER_SHAPE(thirdSyncRatioFrom)) || (durationBeforePrevious > thirdPreviousDuration * TRIGGER_SHAPE(thirdSyncRatioFrom)
-			&& durationBeforePrevious < thirdPreviousDuration * TRIGGER_SHAPE(thirdSyncRatioTo));
+			bool isSync = isGapCondition[0];
+			for (int index = 1; index < GAP_TRACKING_LENGTH ; index++) {
+				isSync = isSync && isGapCondition[index];
+			}
+			isSynchronizationPoint = isSync;
 
-			/**
-			 * Here I prefer to have two multiplications instead of one division, that's a micro-optimization
-			 */
-			isSynchronizationPoint = primaryGap
-					&& secondaryGap
-					&& thirdGap;
 
 #if EFI_PROD_CODE || defined(__DOXYGEN__)
 			if (CONFIG(isPrintTriggerSynchDetails) || (someSortOfTriggerError && !CONFIG(silentTriggerError))) {
 #else
 				if (printTriggerDebug) {
 #endif /* EFI_PROD_CODE */
-				float gap = 1.0 * currentDuration / toothed_previous_duration;
-				float prevGap = 1.0 * toothed_previous_duration / durationBeforePrevious;
-				float gap3 = 1.0 * durationBeforePrevious / thirdPreviousDuration;
+
 #if EFI_PROD_CODE || defined(__DOXYGEN__)
-				scheduleMsg(logger, "%d: cur=%.2f/prev=%.2f/3rd=%.2f @ %d while expected from %.2f to %.2f and 2nd from %.2f to %.2f and 3rd from %.2f to %.2f error=%d",
-						getTimeNowSeconds(),
-						gap, prevGap, gap3,
-						currentCycle.current_index,
-						TRIGGER_SHAPE(syncRatioFrom), TRIGGER_SHAPE(syncRatioTo),
-						TRIGGER_SHAPE(secondSyncRatioFrom), TRIGGER_SHAPE(secondSyncRatioTo),
-						TRIGGER_SHAPE(thirdSyncRatioFrom), TRIGGER_SHAPE(thirdSyncRatioTo),
-						someSortOfTriggerError);
+
+				for (int i = 0;i<GAP_TRACKING_LENGTH;i++) {
+					float gap = 1.0 * toothDurations[i] / toothDurations[i + 1];
+					scheduleMsg(logger, "%d %d: cur %.2f expected from %.2f to %.2f error=%d",
+							getTimeNowSeconds(),
+							i,
+							gap,
+							TRIGGER_SHAPE(syncronizationRatioFrom[i]),
+							TRIGGER_SHAPE(syncronizationRatioTo[i]),
+							someSortOfTriggerError);
+				}
+
 #else
+				float gap = 1.0 * toothDurations[0] / toothDurations[1];
 				actualSynchGap = gap;
-				print("current gap %.2f/%.2f/%.2f c=%d prev=%d\r\n", gap, prevGap, gap3, currentDuration, toothed_previous_duration);
+				for (int i = 0;i<GAP_TRACKING_LENGTH;i++) {
+					float gap = 1.0 * toothDurations[i] / toothDurations[i + 1];
+					print("%d: cur %.2f expected from %.2f to %.2f error=%d",
+							i,
+							gap,
+							TRIGGER_SHAPE(syncronizationRatioFrom[i]),
+							TRIGGER_SHAPE(syncronizationRatioTo[i]),
+							someSortOfTriggerError);
+				}
+
+
 #endif /* EFI_PROD_CODE */
 			}
 
@@ -419,9 +431,10 @@ void TriggerState::decodeTriggerEvent(trigger_event_e const signal, efitime_t no
 			;
 		}
 
-		thirdPreviousDuration = durationBeforePrevious;
-		durationBeforePrevious = toothed_previous_duration;
-		toothed_previous_duration = currentDuration;
+		for (int i = GAP_TRACKING_LENGTH; i > 0; i--) {
+			toothDurations[i] = toothDurations[i - 1];
+		}
+
 		toothed_previous_time = nowNt;
 	}
 	if (!isValidIndex(PASS_ENGINE_PARAMETER_SIGNATURE) && !isInitializingTrigger) {
@@ -591,6 +604,10 @@ void TriggerShape::initializeTriggerShape(Logging *logger DECLARE_ENGINE_PARAMET
 		initDodgeRam(this PASS_ENGINE_PARAMETER_SUFFIX);
 		break;
 
+	case TT_JEEP_4_CYL:
+		initJeep_XJ_4cyl_2500(this PASS_ENGINE_PARAMETER_SUFFIX);
+		break;
+
 	case TT_JEEP_18_2_2_2:
 		initJeep18_2_2_2(this PASS_ENGINE_PARAMETER_SUFFIX);
 		break;
@@ -621,6 +638,10 @@ void TriggerShape::initializeTriggerShape(Logging *logger DECLARE_ENGINE_PARAMET
 
 	case TT_ROVER_K:
 		initializeRoverK(this PASS_ENGINE_PARAMETER_SUFFIX);
+		break;
+
+	case TT_FIAT_IAW_P8:
+		configureFiatIAQ_P8(this PASS_ENGINE_PARAMETER_SUFFIX);
 		break;
 
 	case TT_GM_LS_24:
