@@ -66,8 +66,11 @@
 #include "lcd_controller.h"
 #include "pin_repository.h"
 #include "tachometer.h"
-#include "CJ125.h"
 #endif /* EFI_PROD_CODE */
+
+#if EFI_CJ125 || defined(__DOXYGEN__)
+#include "CJ125.h"
+#endif
 
 #if defined(EFI_BOOTLOADER_INCLUDE_CODE) || defined(__DOXYGEN__)
 #include "bootloader/bootloader.h"
@@ -622,8 +625,8 @@ void initEngineContoller(Logging *sharedLogger DECLARE_ENGINE_PARAMETER_SUFFIX) 
 	/**
 	 * this uses SimplePwm which depends on scheduler, has to be initialized after scheduler
 	 */
-	initCJ125(sharedLogger);
-#endif
+	initCJ125(sharedLogger PASS_ENGINE_PARAMETER_SUFFIX);
+#endif /* EFI_CJ125 */
 
 
 #if EFI_SHAFT_POSITION_INPUT || defined(__DOXYGEN__)

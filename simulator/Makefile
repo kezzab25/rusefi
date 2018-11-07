@@ -24,7 +24,7 @@ endif
 
 # C++ specific options here (added to USE_OPT).
 ifeq ($(USE_CPPOPT),)
-  USE_CPPOPT = -fno-rtti
+  USE_CPPOPT = -std=c++11 -fno-rtti
 endif
 
 # Enable this if you want the linker to remove unused code and data.
@@ -133,6 +133,8 @@ CPPSRC = $(UTILSRC_CPP) \
 	$(PROJECT_DIR)/development/sensor_chart.cpp \
 	$(PROJECT_DIR)/development/trigger_emulator.cpp \
 	$(PROJECT_DIR)/hw_layer/stepper.cpp \
+		  $(PROJECT_DIR)/hw_layer/HIP9011.cpp \
+		  $(PROJECT_DIR)/hw_layer/sensors/CJ125.cpp \
 	$(TRIGGER_SRC_CPP) \
 	$(TRIGGER_DECODERS_SRC_CPP) \
 	$(SYSTEMSRC_CPP) \
@@ -169,6 +171,7 @@ INCDIR = . \
           $(PROJECT_DIR)/controllers \
           $(PROJECT_DIR)/hw_layer \
           $(PROJECT_DIR)/hw_layer/algo \
+          $(PROJECT_DIR)/hw_layer/sensors/ \
           $(PROJECT_DIR)/development \
           $(PROJECT_DIR)/controllers/algo \
           $(PROJECT_DIR)/controllers/core \
